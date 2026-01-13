@@ -38,6 +38,7 @@ import (
 	"github.com/charmbracelet/crush/internal/permission"
 	"github.com/charmbracelet/crush/internal/session"
 	"github.com/charmbracelet/crush/internal/stringext"
+	"github.com/charmbracelet/crush/internal/tui/styles"
 )
 
 const defaultSessionName = "Untitled Session"
@@ -337,6 +338,17 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 		},
 		OnToolResult: func(result fantasy.ToolResultContent) error {
 			toolResult := a.convertToToolResult(result)
+
+			estimator := tools.NewTokenEstimator()
+			resultTokens := estimator.Estimate(toolResult.Content)
+			cw := a.largeModel.CatwalkCfg.ContextWindow
+			currentTokens := currentSession.CompletionTokens + currentSession.PromptTokens
+			remaining := cw - currentTokens
+
+			if int64(resultTokens) > tools.LargeContentThreshold {
+				toolResult.Content = fmt.Sprintf("%s Tool returned large context: Result: ~%d tokens, Available: ~%d tokens. Try requesting less data: %s", styles.WarningIcon, resultTokens, remaining, toolResult.Content)
+			}
+
 			_, createMsgErr := a.messages.Create(genCtx, currentAssistant.SessionID, message.CreateMessageParams{
 				Role: message.Tool,
 				Parts: []message.ContentPart{
