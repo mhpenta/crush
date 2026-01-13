@@ -16,7 +16,7 @@ type TokenEstimator struct {
 func NewTokenEstimator() *TokenEstimator {
 	return &TokenEstimator{
 		SafetyMargin:       1.2,
-		BytesPerToken:      3,
+		BytesPerToken:      4,
 		APIStructureTokens: 3,
 	}
 }
