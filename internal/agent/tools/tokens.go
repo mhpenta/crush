@@ -5,6 +5,13 @@ import (
 	"math"
 )
 
+const (
+	// LargeResultContextFraction defines the denominator for the context window
+	// fraction threshold. Tool results exceeding 1/N of the context window trigger
+	// a warning.
+	LargeResultContextFraction = 8
+)
+
 // TokenEstimator approximates token usage for warnings.
 type TokenEstimator struct {
 	SafetyMargin       float64

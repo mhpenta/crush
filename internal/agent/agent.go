@@ -345,7 +345,7 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 			currentTokens := currentSession.CompletionTokens + currentSession.PromptTokens
 			remaining := cw - currentTokens
 
-			if int64(resultTokens) > tools.LargeContentThreshold {
+			if int64(resultTokens) > cw/tools.LargeResultContextFraction {
 				toolResult.Content = fmt.Sprintf("%s Tool returned large context: Result: ~%d tokens, Available: ~%d tokens. Try requesting less data: %s", styles.WarningIcon, resultTokens, remaining, toolResult.Content)
 			}
 
