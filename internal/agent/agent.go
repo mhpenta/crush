@@ -480,6 +480,10 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 			currentAssistant.AddFinish(message.FinishReasonCanceled, "User canceled request", "")
 		} else if isPermissionErr {
 			currentAssistant.AddFinish(message.FinishReasonPermissionDenied, "User denied permission", "")
+		} else if errors.As(err, &providerErr) && providerErr.IsContextTooLarge() {
+			contextMsg := fmt.Sprintf("Context window exceeded. Used %d tokens out of %d maximum.",
+				providerErr.ContextUsedTokens, providerErr.ContextMaxTokens)
+			currentAssistant.AddFinish(message.FinishReasonError, "Context Too Large", contextMsg)
 		} else if errors.Is(err, hyper.ErrNoCredits) {
 			url := hyper.BaseURL()
 			link := linkStyle.Hyperlink(url, "id=hyper").Render(url)

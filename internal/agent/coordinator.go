@@ -188,6 +188,65 @@ func (c *coordinator) Run(ctx context.Context, sessionID string, prompt string, 
 		}
 	}
 
+	if c.isContextTooLarge(originalErr) {
+		slog.Info("Context too large detected", "session_id", sessionID)
+
+		// Delete the last user message that caused the overflow
+		msgs, err := c.messages.List(ctx, sessionID)
+		if err != nil {
+			slog.Error("Failed to list messages for cleanup", "error", err)
+			return nil, originalErr
+		}
+
+		// Find and delete the last user message
+		var lastUserMessageID string
+		for i := len(msgs) - 1; i >= 0; i-- {
+			if msgs[i].Role == message.User {
+				lastUserMessageID = msgs[i].ID
+				break
+			}
+		}
+
+		if lastUserMessageID != "" {
+			slog.Info("Deleting last user message that caused overflow", "message_id", lastUserMessageID)
+			if err := c.messages.Delete(ctx, lastUserMessageID); err != nil {
+				slog.Error("Failed to delete last user message", "error", err)
+				return nil, originalErr
+			}
+		}
+
+		// Ask user for permission to summarize
+		granted, err := c.permissions.Request(ctx, permission.CreatePermissionRequest{
+			SessionID:   sessionID,
+			ToolCallID:  "context-too-large-" + sessionID,
+			ToolName:    "auto_summarize",
+			Description: "Context window exceeded. Summarize conversation to free up space?",
+			Action:      "summarize",
+			Params: map[string]any{
+				"reason": "context_too_large",
+			},
+			Path: c.cfg.WorkingDir(),
+		})
+
+		if err != nil {
+			slog.Error("Failed to request permission for summarization", "error", err)
+			return nil, originalErr
+		}
+
+		if !granted {
+			slog.Info("User denied summarization request")
+			return nil, originalErr
+		}
+
+		slog.Info("User approved summarization, proceeding", "session_id", sessionID)
+		if err := c.Summarize(ctx, sessionID); err != nil {
+			slog.Error("Failed to summarize after context too large error", "error", err)
+			return nil, originalErr
+		}
+		slog.Info("Retrying request after summarization", "session_id", sessionID)
+		return run()
+	}
+
 	return result, originalErr
 }
 
@@ -842,6 +901,11 @@ func (c *coordinator) Summarize(ctx context.Context, sessionID string) error {
 func (c *coordinator) isUnauthorized(err error) bool {
 	var providerErr *fantasy.ProviderError
 	return errors.As(err, &providerErr) && providerErr.StatusCode == http.StatusUnauthorized
+}
+
+func (c *coordinator) isContextTooLarge(err error) bool {
+	var providerErr *fantasy.ProviderError
+	return errors.As(err, &providerErr) && providerErr.IsContextTooLarge()
 }
 
 func (c *coordinator) refreshOAuth2Token(ctx context.Context, providerCfg config.ProviderConfig) error {
