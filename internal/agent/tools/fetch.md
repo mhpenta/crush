@@ -18,6 +18,7 @@ DO NOT use this tool when you need to:
 - Provide URL to fetch content from
 - Specify desired output format (text, markdown, or html)
 - Optional timeout for request
+- Optional max_bytes to only read first N bytes (like `curl | head -c N`)
 </usage>
 
 <features>

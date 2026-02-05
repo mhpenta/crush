@@ -108,6 +108,9 @@ func NewFetchTool(permissions permission.Service, workingDir string, client *htt
 			const maxFetchResponseSizeBytes = int64(5 * 1024 * 1024)
 
 			maxSize := maxFetchResponseSizeBytes
+			if params.MaxBytes > 0 && int64(params.MaxBytes) < maxSize {
+				maxSize = int64(params.MaxBytes)
+			}
 			body, err := io.ReadAll(io.LimitReader(resp.Body, maxSize))
 			if err != nil {
 				return fantasy.NewTextErrorResponse("Failed to read response body: " + err.Error()), nil
