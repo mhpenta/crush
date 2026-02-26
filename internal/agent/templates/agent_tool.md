@@ -1,7 +1,9 @@
-Launch a new agent that has access to the following tools: GlobTool, GrepTool, LS, View. When you are searching for a keyword or file and are not confident that you will find the right match on the first try, use the Agent tool to perform the search for you.
+Launch a new agent that has access to the following tools: GlobTool, GrepTool, LS, View. Use this tool only after direct search attempts with GrepTool/GlobTool/LS/View are inconclusive.
 
 <usage>
-- If you are searching for a keyword like "config" or "logger", or for questions like "which file does X?", the Agent tool is strongly recommended
+- Always try direct tools (GrepTool/GlobTool/LS/View) first
+- Use the Agent tool only when direct searches remain ambiguous, broad, or inconclusive after at least one focused attempt
+- Use the Agent tool when results are truncated and a refined direct query still does not identify the right target
 - If you want to read a specific file path, use the View or GlobTool tool instead of the Agent tool, to find the match more quickly
 - If you are searching for a specific class definition like "class Foo", use the GlobTool tool instead, to find the match more quickly
 </usage>

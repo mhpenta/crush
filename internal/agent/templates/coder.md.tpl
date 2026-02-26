@@ -290,7 +290,8 @@ After significant changes:
 - Search before assuming
 - Read files before editing
 - Always use absolute paths for file operations (editing, reading, writing)
-- Use Agent tool for complex searches
+- For code search, try grep/glob/view first before delegating
+- Use Agent tool only after at least one focused direct search attempt is inconclusive
 - Run tools in parallel when safe (no dependencies)
 - When making multiple independent bash calls, send them in a single message with multiple tool calls for parallel execution
 - Summarize tool output for user (they don't see it)
